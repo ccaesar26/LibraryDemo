@@ -1,0 +1,30 @@
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="LibraryPU">
+        <!-- JPA Provider -->
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>ro.unitbv.mip.librarydemo.model.Author</class>
+        <class>ro.unitbv.mip.librarydemo.model.Publication</class>
+        <class>ro.unitbv.mip.librarydemo.model.Book</class>
+        <class>ro.unitbv.mip.librarydemo.model.Magazine</class>
+
+        <properties>
+            <!-- 1. PostgreSQL Connection Details -->
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:postgresql://localhost:5432/library_db"/>
+            <property name="jakarta.persistence.jdbc.user" value="postgres"/>
+            <property name="jakarta.persistence.jdbc.password" value="1q2w3e"/>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+
+            <!-- 2. Hibernate Configuration -->
+            <!-- Show generated SQL in the console (useful for debugging) -->
+            <property name="hibernate.show_sql" value="true"/>
+            <!-- Format the SQL nicely -->
+            <property name="hibernate.format_sql" value="true"/>
+
+            <!-- 3. Schema Management Strategy -->
+            <!-- "update": Creates tables if they don't exist, or updates them. -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+        </properties>
+    </persistence-unit>
+</persistence>
