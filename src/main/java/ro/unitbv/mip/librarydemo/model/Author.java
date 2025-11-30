@@ -17,7 +17,7 @@ public class Author {
 
     // One-to-Many relationship: One Author -> Many Publications
     // mappedBy = "author" refers to the 'author' field in the Publication class
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Publication> publications = new ArrayList<>();
 
     // Required by JPA

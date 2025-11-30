@@ -33,9 +33,12 @@ public class PublicationRepository {
 
     public List<Publication> findAll() {
         try (EntityManager em = getEntityManager()) {
-            // Using JPQL to select all Publication objects
-            return em.createQuery("SELECT p FROM Publication p", Publication.class)
-                    .getResultList();
+            // SOLUȚIA: Folosim LEFT JOIN FETCH pentru a forța încărcarea autorilor
+            // în aceeași interogare. Acest lucru previne eroarea LazyInitializationException.
+            return em.createQuery(
+                    "SELECT p FROM Publication p LEFT JOIN FETCH p.author ORDER BY p.title",
+                    Publication.class
+            ).getResultList();
         }
     }
 

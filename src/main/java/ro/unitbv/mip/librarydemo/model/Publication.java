@@ -18,7 +18,7 @@ public abstract class Publication {
 
     // Many-to-One relationship: Many Publications -> One Author
     // This creates the 'author_id' foreign key column in the 'publications' table
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = true) // Author can be null
     private Author author;
 
