@@ -109,7 +109,6 @@ public class PublicationFormView {
         addAuthorButton.setOnAction(e -> handleAddAuthor());
         HBox authorBox = new HBox(5, authorComboBox, addAuthorButton);
         authorComboBox.setPrefWidth(250);
-        authorComboBox.setEditable(true);
         authorComboBox.setPromptText("Select an author");
         mainFormGrid.add(authorBox, 1, 2);
         return mainFormGrid;
