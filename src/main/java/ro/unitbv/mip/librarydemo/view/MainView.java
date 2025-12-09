@@ -5,6 +5,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import ro.unitbv.mip.librarydemo.NavigationManager;
 import ro.unitbv.mip.librarydemo.controller.MainController;
@@ -16,20 +18,34 @@ public class MainView {
     private final NavigationManager navigationManager;
     private final MainController controller;
     private final TableView<PublicationPM> tableView = new TableView<>();
+    private final TextField searchField = new TextField();
+    private final ComboBox<String> typeFilter = new ComboBox<>();
+
 
     public MainView(NavigationManager navManager, MainController controller, ObservableList<PublicationPM> modelList) {
         this.navigationManager = navManager;
         this.controller = controller;
         this.tableView.setItems(modelList); // Legăm tabelul de lista observabilă
         setupTable();
+        setupFiltering();
     }
 
     public BorderPane getView() {
         // ... (codul de layout rămâne la fel)
         BorderPane layout = new BorderPane();
         layout.setPadding(new Insets(10));
+
+        searchField.setPrefWidth(300);
+        var filterPanel = new HBox(10, new Label("Search:"), searchField, new Label("Type:"), typeFilter);
+        filterPanel.setAlignment(Pos.CENTER_LEFT);
+        filterPanel.setPadding(new Insets(0, 0, 10, 0));
+        layout.setTop(filterPanel);
+
+        var controlPanel = createControlPanel();
+        controlPanel.setPadding(new Insets(10, 0, 0, 0));
+
         layout.setCenter(tableView);
-        layout.setRight(createControlPanel());
+        layout.setBottom(controlPanel);
         return layout;
     }
 
@@ -48,7 +64,20 @@ public class MainView {
         tableView.getColumns().setAll(titleCol, authorCol, typeCol);
     }
 
-    private VBox createControlPanel() {
+    private void setupFiltering() {
+        typeFilter.getItems().addAll("All", "Book", "Magazine");
+        typeFilter.setValue("All");
+
+        searchField.textProperty().addListener((obs, oldVal, newVal) ->
+                controller.filterData(newVal, typeFilter.getValue())
+        );
+
+        typeFilter.valueProperty().addListener((obs, oldVal, newVal) ->
+                controller.filterData(searchField.getText(), newVal)
+        );
+    }
+
+    private Pane createControlPanel() {
         // ... (logica butoanelor se schimbă pentru a apela controller-ul)
         Button addButton = new Button("Add New");
         addButton.setOnAction(e -> navigationManager.showPublicationForm(Optional.empty()));
@@ -68,8 +97,8 @@ public class MainView {
         editButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
         deleteButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
 
-        VBox controlPanel = new VBox(10, addButton, editButton, deleteButton);
-        controlPanel.setAlignment(Pos.TOP_CENTER);
+        var controlPanel = new HBox(10, addButton, editButton, deleteButton);
+        controlPanel.setAlignment(Pos.CENTER);
         controlPanel.setPadding(new Insets(0, 0, 0, 10));
         return controlPanel;
     }

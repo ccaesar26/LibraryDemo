@@ -10,6 +10,7 @@ import ro.unitbv.mip.librarydemo.persistence.AuthorRepository;
 import ro.unitbv.mip.librarydemo.persistence.PublicationRepository;
 import ro.unitbv.mip.librarydemo.util.PublicationMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ public class MainController {
     private final PublicationRepository publicationRepository;
     private final AuthorRepository authorRepository;
     private final ObservableList<PublicationPM> publicationList;
+    private List<Publication> allPublications = new ArrayList<>();
 
     public MainController(PublicationRepository pubRepo, AuthorRepository authRepo, ObservableList<PublicationPM> pubList) {
         this.publicationRepository = pubRepo;
@@ -26,8 +28,29 @@ public class MainController {
     }
 
     public void loadData() {
-        List<Publication> entities = publicationRepository.findAll();
-        List<PublicationPM> presentationModels = entities.stream()
+        allPublications = publicationRepository.findAll();
+        List<PublicationPM> presentationModels = allPublications.stream()
+                .map(PublicationMapper::toPM)
+                .collect(Collectors.toList());
+        publicationList.setAll(presentationModels);
+    }
+
+    public void filterData(String searchTerm, String type) {
+        List<Publication> filteredList = allPublications.stream()
+                .filter(p -> {
+                    boolean matchesSearch = searchTerm == null || searchTerm.isEmpty() ||
+                            p.getTitle().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                            (p.getAuthor() != null && p.getAuthor().getName().toLowerCase().contains(searchTerm.toLowerCase()));
+
+                    boolean matchesType = "All".equals(type) ||
+                            ("Book".equals(type) && p instanceof Book) ||
+                            ("Magazine".equals(type) && p instanceof Magazine);
+
+                    return matchesSearch && matchesType;
+                })
+                .collect(Collectors.toList());
+
+        List<PublicationPM> presentationModels = filteredList.stream()
                 .map(PublicationMapper::toPM)
                 .collect(Collectors.toList());
         publicationList.setAll(presentationModels);
