@@ -20,6 +20,7 @@ public class MainView {
     private final TableView<PublicationPM> tableView = new TableView<>();
     private final TextField searchField = new TextField();
     private final ComboBox<String> typeFilter = new ComboBox<>();
+    private final PublicationDetailsView detailsView = new PublicationDetailsView();
 
 
     public MainView(NavigationManager navManager, MainController controller, ObservableList<PublicationPM> modelList) {
@@ -28,6 +29,7 @@ public class MainView {
         this.tableView.setItems(modelList); // Legăm tabelul de lista observabilă
         setupTable();
         setupFiltering();
+        setupSelectionListener();
     }
 
     public BorderPane getView() {
@@ -45,6 +47,7 @@ public class MainView {
         controlPanel.setPadding(new Insets(10, 0, 0, 0));
 
         layout.setCenter(tableView);
+        layout.setRight(detailsView);
         layout.setBottom(controlPanel);
         return layout;
     }
@@ -62,6 +65,16 @@ public class MainView {
         typeCol.setCellValueFactory(cellData -> cellData.getValue().typeProperty());
 
         tableView.getColumns().setAll(titleCol, authorCol, typeCol);
+    }
+
+    private void setupSelectionListener() {
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                detailsView.updateDetails(newSelection.getOriginalEntity());
+            } else {
+                detailsView.updateDetails(null);
+            }
+        });
     }
 
     private void setupFiltering() {
