@@ -4,10 +4,7 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import ro.unitbv.mip.librarydemo.controller.MainController;
@@ -15,6 +12,8 @@ import ro.unitbv.mip.librarydemo.model.presentation.PublicationPM;
 import ro.unitbv.mip.librarydemo.persistence.AuthorRepository;
 import ro.unitbv.mip.librarydemo.persistence.PersistenceManager;
 import ro.unitbv.mip.librarydemo.persistence.PublicationRepository;
+import ro.unitbv.mip.librarydemo.view.HomeView;
+import ro.unitbv.mip.librarydemo.view.MainView;
 
 public class LibraryApplication extends Application {
     @Override
@@ -26,21 +25,36 @@ public class LibraryApplication extends Application {
 
         // Inițializare Controler
         MainController mainController = new MainController(publicationRepository, authorRepository, publicationList);
+        mainController.loadData();
 
-        // Inițializare NavigationManager
+        // Create TabPane
+        TabPane tabPane = new TabPane();
+
+        // Home Tab
+        Tab homeTab = new Tab("Home");
+        HomeView homeView = new HomeView();
+        homeTab.setContent(homeView.getView());
+        homeTab.setClosable(false);
+
+        // Browse Publications Tab
+        Tab browseTab = new Tab("Browse Publications");
         BorderPane rootLayout = new BorderPane();
         NavigationManager navigationManager = new NavigationManager(rootLayout, mainController, publicationList);
+        MainView mainView = new MainView(navigationManager, mainController, publicationList);
+        rootLayout.setCenter(mainView.getView());
+        browseTab.setContent(rootLayout);
+        browseTab.setClosable(false);
+
+        tabPane.getTabs().addAll(homeTab, browseTab);
 
         // Create MenuBar
         MenuBar menuBar = createMenuBar();
-        rootLayout.setTop(menuBar);
-
-        // Afișarea vederii principale
-        navigationManager.showMainView();
-        mainController.loadData();
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setTop(menuBar);
+        mainLayout.setCenter(tabPane);
 
         // Configurarea scenei principale
-        Scene scene = new Scene(rootLayout, 800, 600);
+        Scene scene = new Scene(mainLayout, 800, 600);
         primaryStage.setTitle("Library Demo Application");
         primaryStage.setScene(scene);
         primaryStage.show();
