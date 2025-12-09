@@ -14,8 +14,6 @@ import ro.unitbv.mip.librarydemo.model.Author;
 import ro.unitbv.mip.librarydemo.model.Book;
 import ro.unitbv.mip.librarydemo.model.Magazine;
 import ro.unitbv.mip.librarydemo.model.Publication;
-import ro.unitbv.mip.librarydemo.persistence.AuthorRepository;
-import ro.unitbv.mip.librarydemo.persistence.PublicationRepository;
 
 import java.util.Optional;
 

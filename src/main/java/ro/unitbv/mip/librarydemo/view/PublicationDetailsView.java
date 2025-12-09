@@ -33,13 +33,11 @@ public class PublicationDetailsView extends VBox {
             getChildren().add(new Label("Author: " + publication.getAuthor().getName()));
         }
 
-        if (publication instanceof Book) {
-            Book book = (Book) publication;
+        if (publication instanceof Book book) {
             getChildren().add(new Label("Type: Book"));
             getChildren().add(new Label("ISBN: " + book.getIsbn()));
             getChildren().add(new Label("Pages: " + book.getPageCount()));
-        } else if (publication instanceof Magazine) {
-            Magazine magazine = (Magazine) publication;
+        } else if (publication instanceof Magazine magazine) {
             getChildren().add(new Label("Type: Magazine"));
             getChildren().add(new Label("Issue: " + magazine.getIssueNumber()));
             getChildren().add(new Label("Month: " + magazine.getMonth()));
