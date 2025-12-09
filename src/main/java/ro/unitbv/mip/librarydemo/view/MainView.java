@@ -37,8 +37,12 @@ public class MainView {
         BorderPane layout = new BorderPane();
         layout.setPadding(new Insets(10));
 
-        searchField.setPrefWidth(300);
-        var filterPanel = new HBox(10, new Label("Search:"), searchField, new Label("Type:"), typeFilter);
+        searchField.setPrefWidth(334);
+        var searchLabel = new Label("Search:");
+        searchLabel.setPrefWidth(45);
+        var typeLabel = new Label("Type:");
+        typeLabel.setPrefWidth(30);
+        var filterPanel = new HBox(10, searchLabel, searchField, new Label("Type:"), typeFilter);
         filterPanel.setAlignment(Pos.CENTER_LEFT);
         filterPanel.setPadding(new Insets(0, 0, 10, 0));
         layout.setTop(filterPanel);

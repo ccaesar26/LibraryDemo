@@ -4,10 +4,10 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import ro.unitbv.mip.librarydemo.controller.MainController;
@@ -17,34 +17,55 @@ import ro.unitbv.mip.librarydemo.persistence.PersistenceManager;
 import ro.unitbv.mip.librarydemo.persistence.PublicationRepository;
 
 public class LibraryApplication extends Application {
-
     @Override
-    public void start(Stage stage) {
-        // --- PASUL 1: Crearea Dependențelor (Repositories & Modelul UI) ---
+    public void start(Stage primaryStage) {
+        // Inițializare Model
         PublicationRepository publicationRepository = new PublicationRepository();
         AuthorRepository authorRepository = new AuthorRepository();
         ObservableList<PublicationPM> publicationList = FXCollections.observableArrayList();
 
-        // --- PASUL 2: Crearea Controlerului și Injectarea Dependențelor ---
-        MainController controller = new MainController(publicationRepository, authorRepository, publicationList);
+        // Inițializare Controler
+        MainController mainController = new MainController(publicationRepository, authorRepository, publicationList);
 
-        // --- PASUL 3: Crearea Vederilor și a Navigației ---
-        // Vederea principală este creată și legată de controler și de modelul UI.
-        BorderPane root = new BorderPane();
-        NavigationManager navigationManager = new NavigationManager(root, controller, publicationList);
+        // Inițializare NavigationManager
+        BorderPane rootLayout = new BorderPane();
+        NavigationManager navigationManager = new NavigationManager(rootLayout, mainController, publicationList);
 
-        // --- PASUL 4: Încărcarea Datelor Inițiale și Afișarea Scenei ---
-        navigationManager.showMainView(); // Afișează pagina principală
-        controller.loadData(); // Pornește încărcarea datelor
+        // Create MenuBar
+        MenuBar menuBar = createMenuBar();
+        rootLayout.setTop(menuBar);
 
-        Scene scene = new Scene(root, 700, 500);
-        stage.setTitle("Library MVC");
-        stage.setScene(scene);
-        stage.show();
+        // Afișarea vederii principale
+        navigationManager.showMainView();
+        mainController.loadData();
+
+        // Configurarea scenei principale
+        Scene scene = new Scene(rootLayout, 800, 600);
+        primaryStage.setTitle("Library Demo Application");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private MenuBar createMenuBar() {
+        MenuBar menuBar = new MenuBar();
+        Menu helpMenu = new Menu("Help");
+        MenuItem aboutItem = new MenuItem("About");
+        aboutItem.setOnAction(e -> showAboutDialog());
+        helpMenu.getItems().add(aboutItem);
+        menuBar.getMenus().add(helpMenu);
+        return menuBar;
+    }
+
+    private void showAboutDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About");
+        alert.setHeaderText("Library Demo Application");
+        alert.setContentText("This is a simple library management application created for demonstration purposes.\n\nVersion: 1.0");
+        alert.showAndWait();
     }
 
     @Override
-    public void stop() {
+    public void stop() throws Exception {
         PersistenceManager.getInstance().close();
     }
 
