@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import ro.unitbv.mip.librarydemo.NavigationManager;
+import ro.unitbv.mip.librarydemo.controller.MainController;
 import ro.unitbv.mip.librarydemo.model.Author;
 import ro.unitbv.mip.librarydemo.model.Book;
 import ro.unitbv.mip.librarydemo.model.Magazine;
@@ -19,21 +20,19 @@ import ro.unitbv.mip.librarydemo.persistence.PublicationRepository;
 import java.util.Optional;
 
 public class PublicationFormView {
-    // Repositories
-    private final AuthorRepository authorRepository = new AuthorRepository();
-    private final PublicationRepository publicationRepository = new PublicationRepository();
-    // Navigation and state
     private final NavigationManager navigationManager;
+    private final MainController controller;
     private final Optional<Publication> publicationToEdit;
-    // UI Components
+
     private final ComboBox<Author> authorComboBox = new ComboBox<>();
     private final TextField titleField = new TextField();
     private final ComboBox<String> typeComboBox = new ComboBox<>();
     private final GridPane bookForm = createBookForm();
     private final GridPane magazineForm = createMagazineForm();
 
-    public PublicationFormView(NavigationManager navigationManager, Optional<Publication> publicationOpt) {
+    public PublicationFormView(NavigationManager navigationManager, MainController controller, Optional<Publication> publicationOpt) {
         this.navigationManager = navigationManager;
+        this.controller = controller;
         this.publicationToEdit = publicationOpt;
     }
 
@@ -70,25 +69,21 @@ public class PublicationFormView {
             new Alert(Alert.AlertType.ERROR, "Title cannot be empty.").show();
             return;
         }
+
         Author author = authorComboBox.getValue();
+
+        Publication originalEntity = publicationToEdit.orElse(null);
+
         if ("Book".equals(typeComboBox.getValue())) {
             String isbn = ((TextField) bookForm.lookup("#isbnField")).getText();
             int pageCount = Integer.parseInt(((TextField) bookForm.lookup("#pageCountField")).getText());
-            Book book = publicationToEdit.map(p -> (p instanceof Book) ? (Book) p : new Book(title, isbn, pageCount)).orElse(new Book(title, isbn, pageCount));
-            book.setTitle(title);
-            book.setIsbn(isbn);
-            book.setPageCount(pageCount);
-            book.setAuthor(author);
-            publicationRepository.saveOrUpdate(book);
+
+            controller.saveBook(originalEntity, title, isbn, pageCount, author);
         } else {
             int issueNr = Integer.parseInt(((TextField) magazineForm.lookup("#issueNrField")).getText());
             String month = ((TextField) magazineForm.lookup("#monthField")).getText();
-            Magazine magazine = publicationToEdit.map(p -> (p instanceof Magazine) ? (Magazine) p : new Magazine(title, issueNr, month)).orElse(new Magazine(title, issueNr, month));
-            magazine.setTitle(title);
-            magazine.setIssueNumber(issueNr);
-            magazine.setMonth(month);
-            magazine.setAuthor(author);
-            publicationRepository.saveOrUpdate(magazine);
+
+            controller.saveMagazine(originalEntity, title, issueNr, month, author);
         }
         navigationManager.showMainView();
     }
@@ -166,7 +161,7 @@ public class PublicationFormView {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(name -> {
             if (!name.isBlank()) {
-                Author newAuthor = authorRepository.add(new Author(name));
+                Author newAuthor = controller.saveAuthor(name);
                 refreshAuthors();
                 authorComboBox.setValue(newAuthor);
             }
@@ -174,7 +169,7 @@ public class PublicationFormView {
     }
 
     private void refreshAuthors() {
-        authorComboBox.setItems(FXCollections.observableArrayList(authorRepository.findAll()));
+        authorComboBox.setItems(FXCollections.observableArrayList(controller.getAuthors()));
     }
 
     private void populateForm(Publication p) {

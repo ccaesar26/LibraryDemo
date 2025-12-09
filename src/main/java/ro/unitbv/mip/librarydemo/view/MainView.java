@@ -1,7 +1,5 @@
 package ro.unitbv.mip.librarydemo.view;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,25 +7,25 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import ro.unitbv.mip.librarydemo.NavigationManager;
-import ro.unitbv.mip.librarydemo.model.Book;
-import ro.unitbv.mip.librarydemo.model.Publication;
-import ro.unitbv.mip.librarydemo.persistence.PublicationRepository;
+import ro.unitbv.mip.librarydemo.controller.MainController;
+import ro.unitbv.mip.librarydemo.model.presentation.PublicationPM;
 
 import java.util.Optional;
 
 public class MainView {
     private final NavigationManager navigationManager;
-    private final PublicationRepository repository = new PublicationRepository();
-    private final TableView<Publication> tableView = new TableView<>();
-    private final ObservableList<Publication> modelList = FXCollections.observableArrayList();
+    private final MainController controller;
+    private final TableView<PublicationPM> tableView = new TableView<>();
 
-    public MainView(NavigationManager navigationManager) {
-        this.navigationManager = navigationManager;
+    public MainView(NavigationManager navManager, MainController controller, ObservableList<PublicationPM> modelList) {
+        this.navigationManager = navManager;
+        this.controller = controller;
+        this.tableView.setItems(modelList); // Legăm tabelul de lista observabilă
         setupTable();
-        refreshData();
     }
 
     public BorderPane getView() {
+        // ... (codul de layout rămâne la fel)
         BorderPane layout = new BorderPane();
         layout.setPadding(new Insets(10));
         layout.setCenter(tableView);
@@ -36,69 +34,53 @@ public class MainView {
     }
 
     private void setupTable() {
-        TableColumn<Publication, String> titleCol = new TableColumn<>("Title");
-        titleCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTitle()));
+        TableColumn<PublicationPM, String> titleCol = new TableColumn<>("Title");
+        titleCol.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         titleCol.setPrefWidth(200);
 
-        TableColumn<Publication, String> authorCol = new TableColumn<>("Author");
-        authorCol.setCellValueFactory(cellData -> {
-            String authorName = (cellData.getValue().getAuthor() != null) ? cellData.getValue().getAuthor().getName() : "N/A";
-            return new SimpleStringProperty(authorName);
-        });
+        TableColumn<PublicationPM, String> authorCol = new TableColumn<>("Author");
+        authorCol.setCellValueFactory(cellData -> cellData.getValue().authorNameProperty());
         authorCol.setPrefWidth(150);
 
-        TableColumn<Publication, String> typeCol = new TableColumn<>("Type");
-        typeCol.setCellValueFactory(cellData -> {
-            String type = (cellData.getValue() instanceof Book) ? "Book" : "Magazine";
-            return new SimpleStringProperty(type);
-        });
+        TableColumn<PublicationPM, String> typeCol = new TableColumn<>("Type");
+        typeCol.setCellValueFactory(cellData -> cellData.getValue().typeProperty());
 
-        tableView.getColumns().addAll(titleCol, authorCol, typeCol);
-        tableView.setItems(modelList);
+        tableView.getColumns().setAll(titleCol, authorCol, typeCol);
     }
 
     private VBox createControlPanel() {
+        // ... (logica butoanelor se schimbă pentru a apela controller-ul)
         Button addButton = new Button("Add New");
-        addButton.setPrefWidth(100);
-        Button editButton = new Button("Edit");
-        editButton.setPrefWidth(100);
-        Button deleteButton = new Button("Delete");
-        deleteButton.setPrefWidth(100);
+        addButton.setOnAction(e -> navigationManager.showPublicationForm(Optional.empty()));
 
-        // Bind disable property to selection
+        Button editButton = new Button("Edit");
+        editButton.setOnAction(e -> {
+            PublicationPM selected = tableView.getSelectionModel().getSelectedItem();
+            navigationManager.showPublicationForm(Optional.of(selected.getOriginalEntity()));
+        });
+
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnAction(e -> {
+            PublicationPM selected = tableView.getSelectionModel().getSelectedItem();
+            handleDelete(selected);
+        });
+
         editButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
         deleteButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
 
-        addButton.setOnAction(e -> navigationManager.showPublicationForm(Optional.empty()));
-        editButton.setOnAction(e -> {
-            Publication selected = tableView.getSelectionModel().getSelectedItem();
-            navigationManager.showPublicationForm(Optional.of(selected));
-        });
-        deleteButton.setOnAction(e -> handleDelete());
-
         VBox controlPanel = new VBox(10, addButton, editButton, deleteButton);
-        controlPanel.setPadding(new Insets(0, 0, 0, 10));
         controlPanel.setAlignment(Pos.TOP_CENTER);
+        controlPanel.setPadding(new Insets(0, 0, 0, 10));
         return controlPanel;
     }
 
-    private void handleDelete() {
-        Publication selected = tableView.getSelectionModel().getSelectedItem();
+    private void handleDelete(PublicationPM selected) {
         if (selected == null) return;
-
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Deletion");
-        alert.setHeaderText("Are you sure you want to delete this publication?");
-        alert.setContentText(selected.getTitle());
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            repository.delete(selected);
-            refreshData();
-        }
-    }
-
-    private void refreshData() {
-        modelList.setAll(repository.findAll());
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + selected.getTitle() + "?", ButtonType.YES, ButtonType.CANCEL);
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                controller.deletePublication(selected);
+            }
+        });
     }
 }
